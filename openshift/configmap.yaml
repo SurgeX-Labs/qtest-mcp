@@ -1,0 +1,10 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: qtest-mcp-config
+data:
+  APP_NAME: "qtest-mcp-server"
+  APP_ENV: "prod"
+  QTEST_BASE_URL: "https://your-company.qtestnet.com"
+  ALLOWED_ORIGINS: "https://qtest-mcp.apps.example.com"
+  TOKEN_TTL_MINUTES: "43200"
