@@ -1,19 +1,20 @@
 from typing import Any
 from fastapi import APIRouter, Header, HTTPException, Request
+from app.core.access_control import assert_tool_access, can_access_tool
 from app.core.security import verify_personal_token, decrypt_secret
 from app.services.qtest_client import QTestClient
 from app.mcp.tools import TOOL_DEFINITIONS, call_tool
 
 router = APIRouter()
 
-def _get_client_from_auth(authorization: str | None) -> QTestClient:
+def _get_client_and_claims(authorization: str | None) -> tuple[QTestClient, dict[str, Any]]:
     if not authorization or not authorization.startswith("Bearer "):
         raise HTTPException(status_code=401, detail="Missing Bearer token")
     personal_token = authorization.replace("Bearer ", "", 1)
     try:
         claims = verify_personal_token(personal_token)
         qtest_token = decrypt_secret(claims["qtest_token"])
-        return QTestClient(qtest_token)
+        return QTestClient(qtest_token), claims
     except Exception as exc:
         raise HTTPException(status_code=401, detail=f"Invalid MCP token: {str(exc)}")
 
@@ -41,15 +42,21 @@ async def mcp_endpoint(request: Request, authorization: str | None = Header(defa
         }
 
     if method == "tools/list":
-        _get_client_from_auth(authorization)
-        return {"jsonrpc": "2.0", "id": request_id, "result": {"tools": TOOL_DEFINITIONS}}
+        _, claims = _get_client_and_claims(authorization)
+        visible_tools = []
+        for tool in TOOL_DEFINITIONS:
+            allowed, _ = can_access_tool(claims, tool["name"])
+            if allowed:
+                visible_tools.append(tool)
+        return {"jsonrpc": "2.0", "id": request_id, "result": {"tools": visible_tools}}
 
     if method == "tools/call":
-        client = _get_client_from_auth(authorization)
+        client, claims = _get_client_and_claims(authorization)
         params = body.get("params", {})
         tool_name = params.get("name")
         args = params.get("arguments", {})
         try:
+            assert_tool_access(claims, tool_name)
             result = await call_tool(client, tool_name, args)
             return {
                 "jsonrpc": "2.0",

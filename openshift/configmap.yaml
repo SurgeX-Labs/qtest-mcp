@@ -8,3 +8,8 @@ data:
   QTEST_BASE_URL: "https://your-company.qtestnet.com"
   ALLOWED_ORIGINS: "https://qtest-mcp.apps.example.com"
   TOKEN_TTL_MINUTES: "43200"
+  JWT_ISSUER: "qtest-mcp-server"
+  JWT_AUDIENCE: "qtest-mcp-clients"
+  ALLOW_BOT_WRITES: "false"
+  DEFAULT_USER_SCOPES: "projects:read,requirements:read,requirements:write,testcases:read,testcases:write,testruns:read,defects:read,defects:write"
+  DEFAULT_BOT_SCOPES: "projects:read,requirements:read,testcases:read,testruns:read,defects:read"

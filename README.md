@@ -2,6 +2,11 @@
 
 Production-ready starter scaffold for a qTest MCP server deployable on OpenShift.
 
+See `OPERATIONS_AND_ACCESS_CONTROL.md` for environment-specific run/deploy instructions and no-DB access control design.
+
+Access control is scope-based and enforced per MCP tool call. `tools/list` is filtered by token scopes.
+Optional service-token minting endpoint: `POST /api/auth/generate-service-token` (requires `X-Admin-Token` matching `MCP_ADMIN_TOKEN`).
+
 ## What this project provides
 
 1. A web portal where a user enters qTest username/password once.
